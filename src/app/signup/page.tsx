@@ -1,8 +1,9 @@
 "use client"
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
 
@@ -12,15 +13,37 @@ export default function SignupPage() {
         password: "",
         username: "",
     })
+    const [buttonDisabled, setButtonDisabled] = React.useState(false);
+    const [loading, setLoading] = React.useState(false);
 
     const onSignup = async () => {
-
+        try {
+            setLoading(true);
+            const response = await axios.post("/api/users/signup", user);
+            console.log("Signup Successful", response.data);
+            toast.success("Signup successful!");
+            router.push("/login");
+        } catch (error: any) {
+            console.log("Signup failed", error.message);
+            toast.error(error.response.data.error);
+        } finally {
+            setLoading(false);
+        }
     }
+
+    useEffect(() => {
+        if (user.email.length > 0 && user.password.length > 0 && user.username.length > 0) {
+            setButtonDisabled(false);
+        }
+        else {
+            setButtonDisabled(true);
+        }
+    }, [user]);
 
     return (
         <div className="w-full h-screen flex flex-col justify-center items-center space-y-1">
             <h1 className="text-2xl">
-                Sign Up
+                {loading ? "Processing..." : "Sign Up"}
             </h1>
             <hr className="bg-white w-48 m-8" /><br />
             <label htmlFor="username">username</label>
@@ -49,7 +72,9 @@ export default function SignupPage() {
             /> <br />
             <button className="p-2 border border-gray-300 rounded-lg px-8 mt-8 mb-4 focus:outline-none"
                 onClick={onSignup}
-            >Signup here</button>
+            >
+                {buttonDisabled ? "No Signup" : "Signup here"}
+            </button>
             <p>Or Visit&nbsp;
                 <Link className="text-blue-400 underline" href={'/login'}>login</Link>
             </p>
